@@ -1,0 +1,168 @@
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz_default_plugins/Grid
+      Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.03
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Plane: XY
+      Plane Cell Count: 60
+      Reference Frame: <Fixed Frame>
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 5
+        Min Value: 0
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/PointCloud2
+      Color Transformer: AxisColor
+      Decay Time: 0
+      Enabled: true
+      Name: Mock Map
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: false
+      Size (Pixels): 3
+      Size (m): 0.25
+      Style: Boxes
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /mock_map
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /visualizer/route
+      Name: Route
+      Queue Size: 100
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /visualizer/waypoints
+      Name: Waypoints
+      Queue Size: 100
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /visualizer/trajectory
+      Name: Trajectory
+      Queue Size: 100
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /visualizer/mesh
+      Name: SFC Mesh
+      Queue Size: 100
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /visualizer/edge
+      Name: SFC Edge
+      Queue Size: 100
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /visualizer/spheres
+      Name: Spheres
+      Queue Size: 100
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Default Light: true
+    Fixed Frame: map
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+      Hide Inactive Objects: true
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+      Line color: 128; 128; 0
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /move_base_simple/goal
+    - Class: rviz_default_plugins/PublishPoint
+      Single click: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /clicked_point
+  Transformation:
+    Current:
+      Class: rviz_default_plugins/TF
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 60
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.06
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 2.5
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.01
+      Pitch: 0.9
+      Target Frame: <Fixed Frame>
+      Value: Orbit (rviz)
+      Yaw: 0.785398
+    Saved: null
