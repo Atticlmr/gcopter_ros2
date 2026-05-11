@@ -1,6 +1,6 @@
 # gcopter_ros2
 
-这是 `gcopter` ROS1 demo 的独立 ROS2 迁移包。包内复制了 GCOPTER 核心算法头文件，不依赖 `../gcopter` 参与编译。
+这是 `gcopter` ROS1 demo 的独立 ROS2 迁移包。
 
 ## 节点
 
