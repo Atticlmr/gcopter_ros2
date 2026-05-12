@@ -8,7 +8,6 @@
 
 #include <geometry_msgs/msg/point.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
-#include <px4_msgs/msg/trajectory_setpoint.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <sensor_msgs/msg/point_field.hpp>
@@ -32,14 +31,11 @@
 namespace
 {
 
-constexpr double kPi = 3.14159265358979323846;
-
 struct Config
 {
     std::string map_topic;
     std::string target_topic;
     std::string marker_frame;
-    std::string controller_topic;
 
     double dilate_radius;
     double voxel_width;
@@ -61,10 +57,6 @@ struct Config
     double smoothing_eps;
     int integral_intervs;
     double rel_cost_tol;
-
-    double publish_rate_hz;
-    bool enu_to_ned;
-    double setpoint_yaw_enu;
 };
 
 geometry_msgs::msg::Point toPoint(const Eigen::Vector3d &p)
@@ -74,35 +66,6 @@ geometry_msgs::msg::Point toPoint(const Eigen::Vector3d &p)
     point.y = p.y();
     point.z = p.z();
     return point;
-}
-
-double wrapPi(double angle)
-{
-    while (angle > kPi) {
-        angle -= 2.0 * kPi;
-    }
-    while (angle < -kPi) {
-        angle += 2.0 * kPi;
-    }
-    return angle;
-}
-
-std::array<float, 3> finiteVectorOrNan(const Eigen::Vector3d &v)
-{
-    return {
-        static_cast<float>(v.x()),
-        static_cast<float>(v.y()),
-        static_cast<float>(v.z()),
-    };
-}
-
-std::array<float, 3> enuVectorToNed(const Eigen::Vector3d &v)
-{
-    return {
-        static_cast<float>(v.y()),
-        static_cast<float>(v.x()),
-        static_cast<float>(-v.z()),
-    };
 }
 
 class Visualizer
@@ -350,7 +313,6 @@ public:
             physical_params(3), physical_params(4), physical_params(5));
 
         visualizer_ = std::make_unique<Visualizer>(this, config_.marker_frame);
-        controller_pub_ = create_publisher<px4_msgs::msg::TrajectorySetpoint>(config_.controller_topic, 10);
 
         map_sub_ = create_subscription<sensor_msgs::msg::PointCloud2>(
             config_.map_topic, rclcpp::QoS(1).reliable(),
@@ -359,9 +321,9 @@ public:
             config_.target_topic, rclcpp::QoS(10),
             std::bind(&GCOPTERPlannerNode::targetCallback, this, std::placeholders::_1));
 
-        const auto timer_period = std::chrono::duration_cast<std::chrono::nanoseconds>(
-            std::chrono::duration<double>(1.0 / config_.publish_rate_hz));
-        publish_timer_ = create_wall_timer(timer_period, std::bind(&GCOPTERPlannerNode::publishTimerCallback, this));
+        publish_timer_ = create_wall_timer(
+            std::chrono::milliseconds(1),
+            std::bind(&GCOPTERPlannerNode::publishTimerCallback, this));
 
         RCLCPP_INFO(get_logger(), "GCOPTER ROS2 planner started");
         RCLCPP_INFO(get_logger(), "Map topic: %s, target topic: %s, marker frame: %s",
@@ -369,8 +331,6 @@ public:
         RCLCPP_INFO(get_logger(), "Map bound: [%.2f %.2f] [%.2f %.2f] [%.2f %.2f], voxel width %.3f",
                     config_.map_bound[0], config_.map_bound[1], config_.map_bound[2],
                     config_.map_bound[3], config_.map_bound[4], config_.map_bound[5], config_.voxel_width);
-        RCLCPP_INFO(get_logger(), "Controller output: %s, ENU->NED: %s, publish rate: %.1f Hz",
-                    config_.controller_topic.c_str(), config_.enu_to_ned ? "true" : "false", config_.publish_rate_hz);
     }
 
 private:
@@ -387,7 +347,6 @@ private:
         declare_parameter<std::string>("map_topic", "/mock_map");
         declare_parameter<std::string>("target_topic", "/move_base_simple/goal");
         declare_parameter<std::string>("marker_frame", "map");
-        declare_parameter<std::string>("controller_topic", "/controller/position/output");
 
         declare_parameter<double>("dilate_radius", 0.5);
         declare_parameter<double>("voxel_width", 0.25);
@@ -409,10 +368,6 @@ private:
         declare_parameter<double>("smoothing_eps", 1.0e-2);
         declare_parameter<int>("integral_intervs", 16);
         declare_parameter<double>("rel_cost_tol", 1.0e-5);
-
-        declare_parameter<double>("publish_rate_hz", 50.0);
-        declare_parameter<bool>("enu_to_ned", true);
-        declare_parameter<double>("setpoint_yaw_enu", 0.0);
     }
 
     void loadParameters()
@@ -420,7 +375,6 @@ private:
         config_.map_topic = get_parameter("map_topic").as_string();
         config_.target_topic = get_parameter("target_topic").as_string();
         config_.marker_frame = get_parameter("marker_frame").as_string();
-        config_.controller_topic = get_parameter("controller_topic").as_string();
 
         config_.dilate_radius = get_parameter("dilate_radius").as_double();
         config_.voxel_width = get_parameter("voxel_width").as_double();
@@ -442,10 +396,6 @@ private:
         config_.smoothing_eps = get_parameter("smoothing_eps").as_double();
         config_.integral_intervs = get_parameter("integral_intervs").as_int();
         config_.rel_cost_tol = get_parameter("rel_cost_tol").as_double();
-
-        config_.publish_rate_hz = get_parameter("publish_rate_hz").as_double();
-        config_.enu_to_ned = get_parameter("enu_to_ned").as_bool();
-        config_.setpoint_yaw_enu = get_parameter("setpoint_yaw_enu").as_double();
     }
 
     void validateParameters()
@@ -458,9 +408,6 @@ private:
         }
         if (config_.voxel_width <= 0.0) {
             throw std::runtime_error("voxel_width must be positive");
-        }
-        if (config_.publish_rate_hz <= 0.0) {
-            throw std::runtime_error("publish_rate_hz must be positive");
         }
     }
 
@@ -711,7 +658,7 @@ private:
         }
         if (t > traj_.getTotalDuration()) {
             active_trajectory_ = false;
-            RCLCPP_INFO(get_logger(), "Trajectory setpoint publishing finished at %.3f s", t);
+            RCLCPP_INFO(get_logger(), "Trajectory metric publishing finished at %.3f s", t);
             return;
         }
 
@@ -723,41 +670,12 @@ private:
         double thrust = 0.0;
         Eigen::Vector4d quat;
         Eigen::Vector3d body_rate;
-        flatmap_.forward(vel, acc, jer, config_.setpoint_yaw_enu, 0.0, thrust, quat, body_rate);
+        flatmap_.forward(vel, acc, jer, 0.0, 0.0, thrust, quat, body_rate);
         const double speed = vel.norm();
         const double tilt = std::acos(std::clamp(1.0 - 2.0 * (quat(1) * quat(1) + quat(2) * quat(2)), -1.0, 1.0));
 
         visualizer_->publishMetrics(speed, thrust, tilt, body_rate.norm());
         visualizer_->visualizeTrackingSphere(pos, config_.dilate_radius);
-        publishSetpoint(pos, vel, acc, jer);
-    }
-
-    void publishSetpoint(
-        const Eigen::Vector3d &pos,
-        const Eigen::Vector3d &vel,
-        const Eigen::Vector3d &acc,
-        const Eigen::Vector3d &jer)
-    {
-        px4_msgs::msg::TrajectorySetpoint msg;
-        msg.timestamp = static_cast<uint64_t>(now().nanoseconds() / 1000);
-
-        if (config_.enu_to_ned) {
-            msg.position = enuVectorToNed(pos);
-            msg.velocity = enuVectorToNed(vel);
-            msg.acceleration = enuVectorToNed(acc);
-            msg.jerk = enuVectorToNed(jer);
-            msg.yaw = static_cast<float>(wrapPi(kPi * 0.5 - config_.setpoint_yaw_enu));
-            msg.yawspeed = 0.0f;
-        } else {
-            msg.position = finiteVectorOrNan(pos);
-            msg.velocity = finiteVectorOrNan(vel);
-            msg.acceleration = finiteVectorOrNan(acc);
-            msg.jerk = finiteVectorOrNan(jer);
-            msg.yaw = static_cast<float>(wrapPi(config_.setpoint_yaw_enu));
-            msg.yawspeed = 0.0f;
-        }
-
-        controller_pub_->publish(msg);
     }
 
     Config config_;
@@ -772,7 +690,6 @@ private:
 
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr map_sub_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr target_sub_;
-    rclcpp::Publisher<px4_msgs::msg::TrajectorySetpoint>::SharedPtr controller_pub_;
     rclcpp::TimerBase::SharedPtr publish_timer_;
 };
 

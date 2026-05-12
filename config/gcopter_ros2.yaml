@@ -4,7 +4,6 @@ gcopter_ros2_planner:
     map_topic: /mock_map
     target_topic: /move_base_simple/goal
     marker_frame: map
-    controller_topic: /controller/position/output
 
     dilate_radius: 0.5
     voxel_width: 0.25
@@ -26,7 +25,3 @@ gcopter_ros2_planner:
     smoothing_eps: 1.0e-2
     integral_intervs: 16
     rel_cost_tol: 1.0e-5
-
-    publish_rate_hz: 50.0
-    enu_to_ned: true
-    setpoint_yaw_enu: 0.0

@@ -27,7 +27,6 @@ git clone https://github.com/Atticlmr/mockamap.git
 - `geometry_msgs`
 - `sensor_msgs`
 - `visualization_msgs`
-- `px4_msgs`
 - `rviz2`
 - `rqt_plot`
 - Eigen3
@@ -54,10 +53,9 @@ git clone https://github.com/Atticlmr/mockamap.git
 - `/visualizer/total_thrust` (`std_msgs/msg/Float64`)
 - `/visualizer/tilt_angle` (`std_msgs/msg/Float64`)
 - `/visualizer/body_rate` (`std_msgs/msg/Float64`)
-- `/controller/position/output` (`px4_msgs/msg/TrajectorySetpoint`)
 
-`/controller/position/output` 默认发布 NED 坐标系 setpoint，由
-`enu_to_ned: true` 控制。节点不发布 PX4 offboard heartbeat，也不发送 vehicle command。
+本包不发布 PX4 setpoint。它保持原始 ROS1 demo 的外部行为：规划、RViz
+Marker 可视化和轨迹指标。控制器接口应由独立控制包实现。
 
 ## 编译
 

@@ -15,7 +15,6 @@ find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
-find_package(px4_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(ompl REQUIRED)
 
@@ -33,7 +32,6 @@ ament_target_dependencies(gcopter_ros2_planner
   geometry_msgs
   sensor_msgs
   visualization_msgs
-  px4_msgs
 )
 
 target_link_libraries(gcopter_ros2_planner
@@ -48,7 +46,7 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
-install(DIRECTORY launch config docs
+install(DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
 )
 

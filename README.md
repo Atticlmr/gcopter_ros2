@@ -29,7 +29,6 @@ Other expected dependencies include:
 - `geometry_msgs`
 - `sensor_msgs`
 - `visualization_msgs`
-- `px4_msgs`
 - `rviz2`
 - `rqt_plot`
 - Eigen3
@@ -56,11 +55,10 @@ Outputs:
 - `/visualizer/total_thrust` (`std_msgs/msg/Float64`)
 - `/visualizer/tilt_angle` (`std_msgs/msg/Float64`)
 - `/visualizer/body_rate` (`std_msgs/msg/Float64`)
-- `/controller/position/output` (`px4_msgs/msg/TrajectorySetpoint`)
 
-`/controller/position/output` publishes NED setpoints by default, controlled by
-`enu_to_ned: true`. This node does not publish PX4 offboard heartbeat messages and
-does not send vehicle commands.
+This package does not publish PX4 setpoints. It keeps the same external behavior
+as the original ROS 1 demo: planning, RViz markers, and trajectory metrics.
+Controller interfaces should be implemented by a separate control package.
 
 ## Build
 
